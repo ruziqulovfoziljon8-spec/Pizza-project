@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import imgg from "../assets/images/imgg.png"; 
 
 export default function Login() {
   const navigate = useNavigate();
@@ -22,74 +23,106 @@ export default function Login() {
     <div
       style={{
         minHeight: "100vh",
-        background: "linear-gradient(135deg, #1e3a8a, #2563eb)",
+        background: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        fontFamily: "sans-serif",
+        fontFamily: "'Proxima Nova', sans-serif",
       }}
     >
       <form
         onSubmit={handleSubmit}
         style={{
           width: "380px",
-          padding: "40px 35px",
-          background: "rgba(17, 24, 39, 0.95)",
-          backdropFilter: "blur(10px)",
-          borderRadius: "20px",
-          boxShadow: "0 25px 50px rgba(0,0,0,0.5)",
+          padding: "50px 40px",
+          background: "rgba(255, 255, 255, 0.12)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderRadius: "35px",
+          boxShadow: "0 25px 50px rgba(0,0,0,0.4)",
+          border: "1px solid rgba(255, 255, 255, 0.2)",
           display: "flex",
           flexDirection: "column",
-          gap: "20px",
+          gap: "25px",
         }}
       >
         <div style={{ textAlign: "center" }}>
-          <h2 style={{ color: "white", marginBottom: "5px" }}>
-            Welcome Back 👋
+          <img
+            src={imgg}
+            alt="Pizza Logo"
+            style={{
+              width: "90px",
+              height: "90px",
+              marginBottom: "15px",
+              filter: "drop-shadow(0 8px 12px rgba(0,0,0,0.3))",
+            }}
+          />
+          <h2
+            style={{
+              color: "white",
+              margin: 0,
+              fontSize: "26px",
+              fontWeight: "800",
+              textTransform: "uppercase",
+              letterSpacing: "1.5px",
+            }}
+          >
+            Admin Kirish
           </h2>
-          <p style={{ color: "#9ca3af", fontSize: "14px" }}>
-            Sign in to continue
+          <p
+            style={{
+              color: "rgba(255,255,255,0.6)",
+              fontSize: "14px",
+              marginTop: "8px",
+            }}
+          >
+            Ma'lumotlarni boshqarish tizimi
           </p>
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label style={{ color: "#9ca3af", fontSize: "14px" }}>Username</label>
-          <input
-            type="text"
-            placeholder="Enter your login..."
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            style={{
-              padding: "12px",
-              borderRadius: "10px",
-              border: "1px solid #374151",
-              backgroundColor: "#1f2937",
-              color: "white",
-              outline: "none",
-            }}
-          />
-        </div>
+        {/* INPUTLAR */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
+          <div style={styles.inputContainer}>
+            <label style={styles.label}>Foydalanuvchi nomi</label>
+            <input
+              type="text"
+              placeholder="Loginni kiriting"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              style={styles.input}
+              className="login-input"
+              required
+            />
+          </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-          <label style={{ color: "#9ca3af", fontSize: "14px" }}>Password</label>
-          <input
-            type="password"
-            placeholder="Enter your password..."
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            style={{
-              padding: "12px",
-              borderRadius: "10px",
-              border: "1px solid #374151",
-              backgroundColor: "#1f2937",
-              color: "white",
-              outline: "none",
-            }}
-          />
+          <div style={styles.inputContainer}>
+            <label style={styles.label}>Parol</label>
+            <input
+              type="password"
+              placeholder="Parolni kiriting"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              style={styles.input}
+              className="login-input"
+              required
+            />
+          </div>
         </div>
 
         {error && (
-          <p style={{ color: "red", fontSize: "14px", textAlign: "center" }}>
+          <p
+            style={{
+              color: "#ff6b6b",
+              fontSize: "14px",
+              textAlign: "center",
+              fontWeight: "600",
+              background: "rgba(255, 107, 107, 0.1)",
+              padding: "8px",
+              borderRadius: "10px",
+            }}
+          >
             {error}
           </p>
         )}
@@ -97,55 +130,63 @@ export default function Login() {
         <button
           type="submit"
           style={{
-            padding: "12px",
-            borderRadius: "10px",
+            padding: "16px",
+            borderRadius: "18px",
             border: "none",
-            background: "linear-gradient(135deg, #22c55e, #16a34a)",
+            background: "#FE5F1E",
             color: "white",
-            fontWeight: "bold",
+            fontSize: "18px",
+            fontWeight: "700",
             cursor: "pointer",
-            transition: "0.3s",
-          }}
-        >
-          Kirish
-        </button>
-
-        <div
-          style={{
+            transition: "all 0.3s ease",
+            boxShadow: "0 10px 20px rgba(254, 95, 30, 0.3)",
             marginTop: "10px",
-            paddingTop: "15px",
-            borderTop: "1px solid rgba(255,255,255,0.1)",
-            textAlign: "center",
           }}
+          className="login-btn"
         >
-          <p
-            style={{
-              color: "#d1d5db",
-              fontWeight: "600",
-              marginBottom: "10px",
-            }}
-          >
-            Demo Credentials
-          </p>
-
-          <div
-            style={{
-              background: "rgba(255,255,255,0.05)",
-              padding: "12px",
-              borderRadius: "10px",
-              fontSize: "14px",
-              color: "#e5e7eb",
-            }}
-          >
-            <p>
-              Username: <span style={{ color: "#f472b6" }}>admin</span>
-            </p>
-            <p>
-              Password: <span style={{ color: "#f472b6" }}>admin123</span>
-            </p>
-          </div>
-        </div>
+          Tizimga kirish
+        </button>
       </form>
+
+      <style>{`
+        .login-input:focus {
+          border-color: #FE5F1E !important;
+          background: rgba(255, 255, 255, 0.2) !important;
+          box-shadow: 0 0 15px rgba(254, 95, 30, 0.25);
+        }
+        .login-btn:hover {
+          background: #e04f1a !important;
+          transform: translateY(-3px);
+          box-shadow: 0 15px 30px rgba(254, 95, 30, 0.4) !important;
+        }
+        .login-btn:active {
+          transform: translateY(-1px);
+        }
+      `}</style>
     </div>
   );
 }
+
+const styles = {
+  inputContainer: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "8px",
+  },
+  label: {
+    color: "rgba(255,255,255,0.9)",
+    fontSize: "14px",
+    fontWeight: "600",
+    marginLeft: "8px",
+  },
+  input: {
+    padding: "15px 20px",
+    borderRadius: "15px",
+    border: "1px solid rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.1)",
+    color: "white",
+    fontSize: "16px",
+    outline: "none",
+    transition: "all 0.3s ease",
+  },
+};

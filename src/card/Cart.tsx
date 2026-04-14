@@ -1,6 +1,7 @@
-
-import img22 from '../assets/images/img22.png'
+import img22 from "../assets/images/img22.png";
 import { useState, useEffect } from "react";
+import { db } from "../firebase";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 
 export interface CartItem {
   id: string;
@@ -21,33 +22,7 @@ interface CartProps {
 }
 
 const mockCartItems: CartItem[] = [
-  {
-    id: "1",
-    title: "Сырный цыпленок",
-    imageUrl: "https://example.com/cheese-chicken.jpg",
-    price: 770,
-    type: "тонкое тесто",
-    size: 26,
-    count: 2,
-  },
-  {
-    id: "2",
-    title: "Креветки по-азиатски",
-    imageUrl: "https://example.com/asian-shrimp.jpg",
-    price: 290,
-    type: "толстое тесто",
-    size: 40,
-    count: 1,
-  },
-  {
-    id: "3",
-    title: "Чизбургер-пицца",
-    imageUrl: "https://example.com/cheeseburger.jpg",
-    price: 350,
-    type: "тонкое тесто",
-    size: 30,
-    count: 3,
-  },
+
 ];
 
 const EmptyCartIcon = () => (
@@ -57,9 +32,7 @@ const EmptyCartIcon = () => (
     viewBox="0 0 300 255"
     fill="none"
     style={{ marginBottom: "40px" }}
-  >
-   
-  </svg>
+  ></svg>
 );
 
 export default function Cart({
@@ -71,6 +44,13 @@ export default function Cart({
   onBack = () => console.log("Go back"),
 }: CartProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>(items);
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [customer, setCustomer] = useState({
+    name: "",
+    phone: "",
+    address: "",
+  });
 
   useEffect(() => {
     setCartItems(items);
@@ -104,6 +84,29 @@ export default function Cart({
   };
 
   const handleBack = () => onBack();
+
+  const sendOrder = async () => {
+    if (!customer.name || !customer.phone || !customer.address) {
+      alert("Iltimos, barcha maydonlarni to'ldiring!");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "orders"), {
+        customer,
+        items: cartItems,
+        totalPrice,
+        totalCount,
+        status: "Kutilmoqda",
+        createdAt: serverTimestamp(),
+      });
+      alert("Buyurtma muvaffaqiyatli yuborildi!");
+      setIsModalOpen(false);
+      handleClear();
+    } catch (e) {
+      console.error("Xato: ", e);
+    }
+  };
 
   if (cartItems.length === 0) {
     return (
@@ -161,8 +164,12 @@ export default function Cart({
           marginBottom: "40px",
         }}
       >
-        <img style={{width:'30px',height:'30px'}} src={img22} alt="" />
-        <h1 style={{ fontSize: "32px", fontWeight: "700", marginRight:'850px' }}>Корзина</h1>
+        <img style={{ width: "30px", height: "30px" }} src={img22} alt="" />
+        <h1
+          style={{ fontSize: "32px", fontWeight: "700", marginRight: "850px" }}
+        >
+          Корзина
+        </h1>
         <button
           onClick={handleClear}
           style={{
@@ -210,20 +217,10 @@ export default function Cart({
               </p>
             </div>
           </div>
-
           <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
             <button
               onClick={() => handleUpdateCount(item.id, item.count - 1)}
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "2px solid #fe5f1e",
-                borderRadius: "50%",
-                background: "white",
-                color: "#fe5f1e",
-                cursor: "pointer",
-                fontWeight: "700",
-              }}
+              style={counterBtnStyle}
             >
               -
             </button>
@@ -238,16 +235,7 @@ export default function Cart({
             </span>
             <button
               onClick={() => handleUpdateCount(item.id, item.count + 1)}
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "2px solid #fe5f1e",
-                borderRadius: "50%",
-                background: "white",
-                color: "#fe5f1e",
-                cursor: "pointer",
-                fontWeight: "700",
-              }}
+              style={counterBtnStyle}
             >
               +
             </button>
@@ -262,16 +250,7 @@ export default function Cart({
             </span>
             <button
               onClick={() => handleRemove(item.id)}
-              style={{
-                width: "32px",
-                height: "32px",
-                border: "2px solid #d7d7d7",
-                borderRadius: "50%",
-                background: "white",
-                color: "#d7d7d7",
-                cursor: "pointer",
-                fontWeight: "700",
-              }}
+              style={removeBtnStyle}
             >
               ×
             </button>
@@ -296,39 +275,119 @@ export default function Cart({
           </p>
         </div>
         <div style={{ display: "flex", gap: "20px" }}>
-          <button
-            onClick={handleBack}
-            style={{
-              border: "1px solid #ddd",
-              background: "white",
-              padding: "10px 20px",
-              borderRadius: "30px",
-              cursor: "pointer",
-              fontWeight: "700",
-            }}
-          >
+          <button onClick={handleBack} style={secondaryBtnStyle}>
             Вернуться назад
           </button>
-          <button
-            onClick={() => {
-              alert(`Оплата успешна! Сумма: ${totalPrice} ₽`);
-              handleClear();
-            }}
-            style={{
-              border: "none",
-              background: "#fe5f1e",
-              color: "white",
-              padding: "10px 20px",
-              borderRadius: "30px",
-              fontWeight: "700",
-              cursor: "pointer",
-            }}
-          >
+          <button onClick={() => setIsModalOpen(true)} style={primaryBtnStyle}>
             Оплатить сейчас
           </button>
         </div>
       </div>
+
+      {isModalOpen && (
+        <div style={modalOverlayStyle}>
+          <div style={modalContentStyle}>
+            <h2 style={{ marginBottom: "20px" }}>Buyurtma berish</h2>
+            <input
+              style={inputStyle}
+              placeholder="Ismingiz"
+              onChange={(e) =>
+                setCustomer({ ...customer, name: e.target.value })
+              }
+            />
+            <input
+              style={inputStyle}
+              placeholder="Telefon raqamingiz"
+              onChange={(e) =>
+                setCustomer({ ...customer, phone: e.target.value })
+              }
+            />
+            <textarea
+              style={{ ...inputStyle, height: "80px" }}
+              placeholder="Manzilingiz"
+              onChange={(e) =>
+                setCustomer({ ...customer, address: e.target.value })
+              }
+            />
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={sendOrder} style={primaryBtnStyle}>
+                Tasdiqlash
+              </button>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                style={secondaryBtnStyle}
+              >
+                Bekor qilish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
+const counterBtnStyle = {
+  width: "32px",
+  height: "32px",
+  border: "2px solid #fe5f1e",
+  borderRadius: "50%",
+  background: "white",
+  color: "#fe5f1e",
+  cursor: "pointer",
+  fontWeight: "700" as const,
+};
+const removeBtnStyle = {
+  width: "32px",
+  height: "32px",
+  border: "2px solid #d7d7d7",
+  borderRadius: "50%",
+  background: "white",
+  color: "#d7d7d7",
+  cursor: "pointer",
+  fontWeight: "700" as const,
+};
+const primaryBtnStyle = {
+  border: "none",
+  background: "#fe5f1e",
+  color: "white",
+  padding: "10px 20px",
+  borderRadius: "30px",
+  fontWeight: "700" as const,
+  cursor: "pointer",
+};
+const secondaryBtnStyle = {
+  border: "1px solid #ddd",
+  background: "white",
+  padding: "10px 20px",
+  borderRadius: "30px",
+  cursor: "pointer",
+  fontWeight: "700" as const,
+};
+const modalOverlayStyle: React.CSSProperties = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "100%",
+  height: "100%",
+  background: "rgba(0,0,0,0.5)",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  zIndex: 1000,
+};
+const modalContentStyle: React.CSSProperties = {
+  background: "white",
+  padding: "30px",
+  borderRadius: "20px",
+  width: "400px",
+  display: "flex",
+  flexDirection: "column",
+};
+const inputStyle: React.CSSProperties = {
+  marginBottom: "15px",
+  padding: "10px",
+  borderRadius: "10px",
+  border: "1px solid #ddd",
+  outline: "none",
+};

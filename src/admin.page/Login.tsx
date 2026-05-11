@@ -82,7 +82,6 @@ export default function Login() {
           </p>
         </div>
 
-        {/* INPUTLAR */}
         <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           <div style={styles.inputContainer}>
             <label style={styles.label}>Foydalanuvchi nomi</label>

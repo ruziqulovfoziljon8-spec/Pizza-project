@@ -4,7 +4,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import Cart from "./card/Cart";
 import Filtered from "./filtered/Filtered";
 import Home from "./Home/Home";
-import Login from "./admin.page/login";
+import Login from "./admin.page/Login";
 import Dashboard from "./admin.page/Dashboard";
 
 interface CartItem {

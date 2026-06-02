@@ -29,7 +29,6 @@ export default function Home({ addToCart, selectedCategory }: HomeProps) {
       try {
         setLoading(true);
         const querySnapshot = await getDocs(collection(db, "users"));
-
         const data = querySnapshot.docs.map((doc) => {
           const rawData = doc.data();
           return {
@@ -49,15 +48,13 @@ export default function Home({ addToCart, selectedCategory }: HomeProps) {
                 : rawData.types || [],
           } as Pizza;
         });
-
         setPizzas(data);
       } catch (err: any) {
-        console.error("Firebase'dan ma'lumot olishda xato:", err.message);
+        console.error("Firebase xatosi:", err.message);
       } finally {
         setLoading(false);
       }
     };
-
     fetchPizzas();
   }, []);
 
@@ -81,110 +78,86 @@ export default function Home({ addToCart, selectedCategory }: HomeProps) {
   }, [filteredPizzas, sortType]);
 
   const handleTypeChange = (pizzaId: string, type: number) => {
-    const pizza = pizzas.find((p) => p.id === pizzaId);
-    if (!pizza) return;
     setSelectedOptions((prev) => ({
       ...prev,
-      [pizzaId]: {
-        ...prev[pizzaId],
-        type,
-        size: prev[pizzaId]?.size || pizza.sizes[0],
-      },
+      [pizzaId]: { ...prev[pizzaId], type, size: prev[pizzaId]?.size || 30 },
     }));
   };
 
   const handleSizeChange = (pizzaId: string, size: number) => {
-    const pizza = pizzas.find((p) => p.id === pizzaId);
-    if (!pizza) return;
     setSelectedOptions((prev) => ({
       ...prev,
-      [pizzaId]: {
-        ...prev[pizzaId],
-        size,
-        type: prev[pizzaId]?.type || (pizza.types.includes(0) ? 0 : 1),
-      },
+      [pizzaId]: { ...prev[pizzaId], size, type: prev[pizzaId]?.type ?? 0 },
     }));
   };
 
   const handleAddToCart = (pizza: Pizza) => {
     const options = selectedOptions[pizza.id] || {
-      type: pizza.types.includes(0) ? 0 : 1,
+      type: pizza.types[0] || 0,
       size: pizza.sizes[0],
     };
-    const typeName = options.type === 0 ? "тонкое" : "традиционное";
     let price = pizza.price;
     if (options.size === 30) price = Math.round(pizza.price * 1.2);
     if (options.size === 40) price = Math.round(pizza.price * 1.5);
-
     addToCart({
       title: pizza.title,
       imageUrl: pizza.imageUrl,
       price: price,
-      type: typeName,
+      type: options.type === 0 ? "тонкое" : "традиционное",
       size: options.size,
     });
   };
 
-  if (loading) {
+  if (loading)
     return (
       <div style={styles.loading}>
         <div style={styles.spinner}></div>
         <p>Pizzalar yuklanmoqda...</p>
       </div>
     );
-  }
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.headerTitle}>
+        <h1 className="header-title">
           {selectedCategory === null ? "Все пиццы" : "Пиццы этой категории"}
         </h1>
       </div>
-
-      <div style={styles.grid}>
+      <div style={styles.grid} className="pizza-grid">
         {sortedPizzas.map((pizza) => {
           const options = selectedOptions[pizza.id] || {
-            type: pizza.types.includes(0) ? 0 : 1,
+            type: pizza.types[0] || 0,
             size: pizza.sizes[0],
           };
-
           const currentPrice = Math.round(
             pizza.price *
               (options.size === 30 ? 1.2 : options.size === 40 ? 1.5 : 1)
           );
-
           return (
             <div key={pizza.id} style={styles.card} className="pizza-card">
               <img
                 src={pizza.imageUrl}
                 alt={pizza.title}
                 style={styles.image}
+                className="pizza-img"
               />
-              <h3 style={styles.pizzaTitle}>{pizza.title}</h3>
-
+              <h3 style={styles.pizzaTitle} className="pizza-title">
+                {pizza.title}
+              </h3>
               <div style={styles.selector}>
                 <div style={styles.selectorRow}>
-                  {[0, 1].map(
-                    (t) =>
-                      pizza.types.includes(t) && (
-                        <button
-                          key={t}
-                          onClick={() => handleTypeChange(pizza.id, t)}
-                          style={{
-                            ...styles.selectorBtn,
-                            background:
-                              options.type === t ? "#fff" : "transparent",
-                            boxShadow:
-                              options.type === t
-                                ? "0 2px 4px rgba(0,0,0,0.05)"
-                                : "none",
-                          }}
-                        >
-                          {t === 0 ? "тонкое" : "традиц."}
-                        </button>
-                      )
-                  )}
+                  {pizza.types.map((t) => (
+                    <button
+                      key={t}
+                      onClick={() => handleTypeChange(pizza.id, t)}
+                      style={{
+                        ...styles.selectorBtn,
+                        background: options.type === t ? "#fff" : "transparent",
+                      }}
+                    >
+                      {t === 0 ? "тонкое" : "традиц."}
+                    </button>
+                  ))}
                 </div>
                 <div style={styles.selectorRow}>
                   {pizza.sizes.map((s) => (
@@ -194,10 +167,6 @@ export default function Home({ addToCart, selectedCategory }: HomeProps) {
                       style={{
                         ...styles.selectorBtn,
                         background: options.size === s ? "#fff" : "transparent",
-                        boxShadow:
-                          options.size === s
-                            ? "0 2px 4px rgba(0,0,0,0.05)"
-                            : "none",
                       }}
                     >
                       {s} см.
@@ -205,7 +174,6 @@ export default function Home({ addToCart, selectedCategory }: HomeProps) {
                   ))}
                 </div>
               </div>
-
               <div style={styles.cardBottom}>
                 <span style={styles.price}>от {currentPrice} ₽</span>
                 <button
@@ -213,10 +181,7 @@ export default function Home({ addToCart, selectedCategory }: HomeProps) {
                   style={styles.addBtn}
                   className="add-button"
                 >
-                  <span style={{ fontSize: "18px", marginRight: "5px" }}>
-                    +
-                  </span>
-                  Добавить
+                  <span>+</span> Добавить
                 </button>
               </div>
             </div>
@@ -226,31 +191,26 @@ export default function Home({ addToCart, selectedCategory }: HomeProps) {
 
       <style>{`
         .pizza-card { transition: all 0.25s ease-in-out; cursor: pointer; }
-        .pizza-card:hover { transform: translateY(-10px); shadow: 0 20px 40px rgba(0,0,0,0.1); }
-        .add-button:hover { background: #e04f1a !important; transform: scale(1.05); }
-        .add-button:active { transform: scale(0.95); }
+        .pizza-card:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+        .add-button:hover { background: #e04f1a !important; }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        @media (max-width: 768px) {
+          .pizza-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; padding: 0 10px !important; }
+          .pizza-card { padding: 10px !important; }
+          .pizza-img { height: 140px !important; }
+          .pizza-title { font-size: 14px !important; min-height: 40px !important; }
+          .header-title { font-size: 20px !important; text-align: center; }
+        }
       `}</style>
     </div>
   );
 }
 
 const styles = {
-  container: {
-    padding: "40px 0",
-    backgroundColor: "#fff",
-    minHeight: "100vh",
-  },
-  header: {
-    maxWidth: "1200px",
-    margin: "0 auto 40px",
-    padding: "0 20px",
-  },
-  headerTitle: {
-    fontSize: "32px",
-    fontWeight: "800",
-    color: "#181818",
-    letterSpacing: "0.5px",
-  },
+  container: { padding: "40px 0", backgroundColor: "#fff", minHeight: "100vh" },
+  header: { maxWidth: "1200px", margin: "0 auto 40px", padding: "0 20px" },
   grid: {
     maxWidth: "1200px",
     margin: "0 auto",
@@ -264,24 +224,18 @@ const styles = {
     padding: "20px",
     borderRadius: "20px",
     backgroundColor: "#fff",
-    border: "1px solid transparent",
   },
   image: {
     width: "100%",
     height: "260px",
     objectFit: "contain" as const,
     marginBottom: "15px",
-    transition: "transform 0.3s ease",
   },
   pizzaTitle: {
     fontSize: "20px",
     fontWeight: "900",
-    color: "#000",
     marginBottom: "20px",
     minHeight: "50px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
   },
   selector: {
     background: "#f3f3f3",
@@ -289,52 +243,37 @@ const styles = {
     padding: "6px",
     marginBottom: "20px",
   },
-  selectorRow: {
-    display: "flex",
-    gap: "5px",
-    marginBottom: "5px",
-  },
+  selectorRow: { display: "flex", gap: "5px", marginBottom: "5px" },
   selectorBtn: {
     flex: 1,
     border: "none",
     padding: "10px 0",
     borderRadius: "6px",
     fontWeight: "700",
-    fontSize: "14px",
+    fontSize: "12px",
     cursor: "pointer",
-    transition: "all 0.2s ease",
-    color: "#2C2C2C",
   },
   cardBottom: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    marginTop: "20px",
+    marginTop: "10px",
   },
-  price: {
-    fontSize: "22px",
-    fontWeight: "700",
-    color: "#000",
-  },
+  price: { fontSize: "18px", fontWeight: "700" },
   addBtn: {
     background: "#fe5f1e",
     color: "#fff",
     border: "none",
-    padding: "10px 20px",
+    padding: "8px 15px",
     borderRadius: "30px",
     fontWeight: "700",
-    fontSize: "16px",
+    fontSize: "14px",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
-    transition: "all 0.2s ease",
+    gap: "5px",
   },
-  loading: {
-    textAlign: "center" as const,
-    marginTop: "150px",
-    fontSize: "20px",
-    color: "#999",
-  },
+  loading: { textAlign: "center" as const, marginTop: "150px" },
   spinner: {
     width: "40px",
     height: "40px",

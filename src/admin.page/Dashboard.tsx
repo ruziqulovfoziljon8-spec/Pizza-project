@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import imgg from "../assets/images/imgg.png";
-
 import Orders from "./Orders";
 import Delivered from "./Delivered";
 import Statistics from "./Statistics";
@@ -9,6 +8,14 @@ import Statistics from "./Statistics";
 export default function Dashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("Bosh sahifa");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -18,12 +25,6 @@ export default function Dashboard() {
         return <Orders />;
       case "Yetkazilganlar":
         return <Delivered />;
-      case "Bosh sahifa":
-        return (
-          <div style={styles.card}>
-            <h3>Statistika tez kunda...</h3>
-          </div>
-        );
       default:
         return <Orders />;
     }
@@ -31,46 +32,49 @@ export default function Dashboard() {
 
   return (
     <div style={styles.container}>
-      <aside style={styles.sidebar}>
+      {isMobile && (
+        <button
+          style={styles.burgerBtn}
+          onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+        >
+          ☰
+        </button>
+      )}
+
+      <aside
+        style={{
+          ...styles.sidebar,
+          transform:
+            isMobile && !isSidebarOpen ? "translateX(-100%)" : "translateX(0)",
+        }}
+      >
         <div style={styles.logoBox}>
           <img src={imgg} alt="Logo" style={{ width: "40px" }} />
           <h2 style={{ fontSize: "18px", margin: 0 }}>PIZZA ADMIN</h2>
         </div>
 
         <nav style={styles.nav}>
-          <button
-            onClick={() => setActiveTab("Bosh sahifa")}
-            style={{
-              ...styles.navBtn,
-              backgroundColor:
-                activeTab === "Bosh sahifa" ? "#FE5F1E" : "transparent",
-              color: activeTab === "Bosh sahifa" ? "white" : "#333",
-            }}
-          >
-            🏠 Bosh sahifa
-          </button>
-          <button
-            onClick={() => setActiveTab("Buyurtmalar")}
-            style={{
-              ...styles.navBtn,
-              backgroundColor:
-                activeTab === "Buyurtmalar" ? "#FE5F1E" : "transparent",
-              color: activeTab === "Buyurtmalar" ? "white" : "#333",
-            }}
-          >
-            🛒 Buyurtmalar
-          </button>
-          <button
-            onClick={() => setActiveTab("Yetkazilganlar")}
-            style={{
-              ...styles.navBtn,
-              backgroundColor:
-                activeTab === "Yetkazilganlar" ? "#FE5F1E" : "transparent",
-              color: activeTab === "Yetkazilganlar" ? "white" : "#333",
-            }}
-          >
-            ✅ Yetkazilganlar
-          </button>
+          {["Bosh sahifa", "Buyurtmalar", "Yetkazilganlar"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => {
+                setActiveTab(tab);
+                if (isMobile) setIsSidebarOpen(false);
+              }}
+              style={{
+                ...styles.navBtn,
+                backgroundColor: activeTab === tab ? "#FE5F1E" : "transparent",
+                color: activeTab === tab ? "white" : "#333",
+              }}
+            >
+              {tab === "Bosh sahifa"
+                ? "🏠 "
+                : tab === "Buyurtmalar"
+                ? "🛒 "
+                : "✅ "}{" "}
+              {tab}
+            </button>
+          ))}
         </nav>
 
         <button onClick={() => navigate("/")} style={styles.logoutBtn}>
@@ -78,7 +82,14 @@ export default function Dashboard() {
         </button>
       </aside>
 
-      <main style={styles.mainContent}>
+      {/* Overlay */}
+      {isMobile && isSidebarOpen && (
+        <div style={styles.overlay} onClick={() => setIsSidebarOpen(false)} />
+      )}
+
+      <main
+        style={{ ...styles.mainContent, marginLeft: isMobile ? "0" : "260px" }}
+      >
         <header style={styles.header}>
           <h1 style={{ margin: 0 }}>{activeTab}</h1>
         </header>
@@ -94,6 +105,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     minHeight: "100vh",
     backgroundColor: "#f4f6f8",
   },
+  burgerBtn: {
+    position: "fixed",
+    top: "20px",
+    left: "20px",
+    zIndex: 1001,
+    fontSize: "24px",
+    border: "none",
+    background: "none",
+    cursor: "pointer",
+  },
   sidebar: {
     width: "260px",
     backgroundColor: "white",
@@ -103,19 +124,17 @@ const styles: { [key: string]: React.CSSProperties } = {
     borderRight: "1px solid #ddd",
     position: "fixed",
     height: "100vh",
+    zIndex: 1000,
+    transition: "0.3s ease",
   },
   logoBox: {
     display: "flex",
     alignItems: "center",
     gap: "10px",
     marginBottom: "40px",
+    marginTop: "20px",
   },
-  nav: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    flex: 1,
-  },
+  nav: { display: "flex", flexDirection: "column", gap: "10px", flex: 1 },
   navBtn: {
     padding: "12px 15px",
     borderRadius: "10px",
@@ -123,7 +142,6 @@ const styles: { [key: string]: React.CSSProperties } = {
     textAlign: "left",
     cursor: "pointer",
     fontWeight: "bold",
-    transition: "0.3s",
   },
   logoutBtn: {
     padding: "12px",
@@ -134,23 +152,16 @@ const styles: { [key: string]: React.CSSProperties } = {
     cursor: "pointer",
     fontWeight: "bold",
   },
-  mainContent: {
-    flex: 1,
-    marginLeft: "260px", 
-    padding: "40px",
-  },
-  header: {
-    marginBottom: "30px",
-  },
-  pageBody: {
+  mainContent: { flex: 1, padding: "40px", transition: "0.3s ease" },
+  overlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
     width: "100%",
+    height: "100%",
+    backgroundColor: "rgba(0,0,0,0.5)",
+    zIndex: 999,
   },
-  card: {
-    backgroundColor: "white",
-    padding: "20px",
-    borderRadius: "15px",
-    boxShadow: "0 4px 6px rgba(0,0,0,0.05)",
-  },
+  header: { marginBottom: "30px", marginTop: "20px" },
+  pageBody: { width: "100%" },
 };
-
-

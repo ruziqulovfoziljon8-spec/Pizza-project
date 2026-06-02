@@ -1,4 +1,3 @@
-import img22 from "../assets/images/img22.png";
 import { useState, useEffect } from "react";
 import { db } from "../firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
@@ -21,31 +20,16 @@ interface CartProps {
   onBack?: () => void;
 }
 
-const mockCartItems: CartItem[] = [
-
-];
-
-const EmptyCartIcon = () => (
-  <svg
-    width="300"
-    height="255"
-    viewBox="0 0 300 255"
-    fill="none"
-    style={{ marginBottom: "40px" }}
-  ></svg>
-);
-
 export default function Cart({
-  items = mockCartItems,
-  onRemove = (id: string) => console.log("Remove item:", id),
-  onClear = () => console.log("Clear cart"),
-  onUpdateCount = (id: string, count: number) =>
-    console.log("Update count:", id, count),
-  onBack = () => console.log("Go back"),
+  items = [],
+  onRemove = () => {},
+  onClear = () => {},
+  onUpdateCount = () => {},
+  onBack = () => {},
 }: CartProps) {
   const [cartItems, setCartItems] = useState<CartItem[]>(items);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); 
   const [customer, setCustomer] = useState({
     name: "",
     phone: "",
@@ -62,35 +46,21 @@ export default function Cart({
   );
   const totalCount = cartItems.reduce((sum, item) => sum + item.count, 0);
 
-  const handleRemove = (id: string) => {
-    setCartItems(cartItems.filter((item) => item.id !== id));
-    onRemove(id);
-  };
-
-  const handleClear = () => {
-    setCartItems([]);
-    onClear();
-  };
-
   const handleUpdateCount = (id: string, count: number) => {
     if (count < 1) {
-      handleRemove(id);
-      return;
+      setCartItems(cartItems.filter((i) => i.id !== id));
+      onRemove(id);
+    } else {
+      setCartItems(cartItems.map((i) => (i.id === id ? { ...i, count } : i)));
+      onUpdateCount(id, count);
     }
-    setCartItems(
-      cartItems.map((item) => (item.id === id ? { ...item, count } : item))
-    );
-    onUpdateCount(id, count);
   };
 
-  const handleBack = () => onBack();
-
   const sendOrder = async () => {
-    if (!customer.name || !customer.phone || !customer.address) {
-      alert("Iltimos, barcha maydonlarni to'ldiring!");
-      return;
-    }
+    if (!customer.name || !customer.phone || !customer.address)
+      return alert("Barcha maydonlarni to'ldiring!");
 
+    setIsLoading(true); 
     try {
       await addDoc(collection(db, "orders"), {
         customer,
@@ -100,53 +70,25 @@ export default function Cart({
         status: "Kutilmoqda",
         createdAt: serverTimestamp(),
       });
-      alert("Buyurtma muvaffaqiyatli yuborildi!");
+      alert("Buyurtma yuborildi!");
       setIsModalOpen(false);
-      handleClear();
+      setCartItems([]);
+      onClear();
     } catch (e) {
-      console.error("Xato: ", e);
+      console.error(e);
+      alert("Xatolik yuz berdi!");
+    } finally {
+      setIsLoading(false); 
     }
   };
 
   if (cartItems.length === 0) {
     return (
-      <div
-        style={{
-          textAlign: "center",
-          padding: "100px 0",
-          maxWidth: "800px",
-          margin: "0 auto",
-        }}
-      >
-        <h2
-          style={{ marginBottom: "20px", fontSize: "32px", fontWeight: "700" }}
-        >
-          Корзина пустая 😕
-        </h2>
-        <p
-          style={{
-            color: "#777",
-            marginBottom: "40px",
-            fontSize: "18px",
-            lineHeight: "1.5",
-          }}
-        >
-          Вероятней всего, вы не заказывали ещё пиццу. <br /> Для того, чтобы
-          заказать пиццу, перейди на главную страницу.
-        </p>
-        <EmptyCartIcon />
+      <div style={{ textAlign: "center", padding: "50px 20px" }}>
+        <h2 style={{ fontSize: "28px" }}>Корзина пустая 😕</h2>
         <button
-          onClick={handleBack}
-          style={{
-            border: "none",
-            background: "#282828",
-            color: "white",
-            borderRadius: "30px",
-            padding: "15px 40px",
-            fontWeight: "700",
-            cursor: "pointer",
-            fontSize: "16px",
-          }}
+          onClick={onBack}
+          style={{ ...primaryBtnStyle, marginTop: "20px" }}
         >
           Вернуться назад
         </button>
@@ -155,30 +97,29 @@ export default function Cart({
   }
 
   return (
-    <div style={{ padding: "40px 60px", maxWidth: "1200px", margin: "0 auto" }}>
+    <div
+      className="cart-container"
+      style={{ padding: "20px", maxWidth: "900px", margin: "0 auto" }}
+    >
       <div
+        className="cart-header"
         style={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          marginBottom: "40px",
+          marginBottom: "30px",
         }}
       >
-        <img style={{ width: "30px", height: "30px" }} src={img22} alt="" />
-        <h1
-          style={{ fontSize: "32px", fontWeight: "700", marginRight: "850px" }}
-        >
-          Корзина
-        </h1>
+        <h1 style={{ fontSize: "24px", margin: 0 }}>Корзина</h1>
         <button
-          onClick={handleClear}
+          onClick={() => {
+            setCartItems([]);
+            onClear();
+          }}
           style={{
             border: "none",
-            background: "#f5f5f5",
+            background: "none",
             color: "#fe5f1e",
-            padding: "10px 20px",
-            borderRadius: "30px",
-            fontWeight: "700",
             cursor: "pointer",
           }}
         >
@@ -189,94 +130,64 @@ export default function Cart({
       {cartItems.map((item) => (
         <div
           key={item.id}
+          className="cart-item"
           style={{
             display: "flex",
-            justifyContent: "space-between",
             alignItems: "center",
+            gap: "15px",
             padding: "20px 0",
             borderBottom: "1px solid #f0f0f0",
           }}
         >
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-            <img
-              src={item.imageUrl}
-              alt={item.title}
-              style={{
-                width: "80px",
-                height: "80px",
-                borderRadius: "10px",
-                objectFit: "cover",
-              }}
-            />
-            <div>
-              <h3 style={{ margin: 0, fontSize: "20px", fontWeight: "700" }}>
-                {item.title}
-              </h3>
-              <p style={{ margin: 0, color: "#777" }}>
-                {item.type}, {item.size} см.
-              </p>
-            </div>
+          <img
+            src={item.imageUrl}
+            alt={item.title}
+            style={{ width: "60px", height: "60px", borderRadius: "10px" }}
+          />
+          <div style={{ flex: 1 }}>
+            <h3 style={{ margin: 0, fontSize: "16px" }}>{item.title}</h3>
+            <p style={{ margin: 0, color: "#777", fontSize: "13px" }}>
+              {item.type}, {item.size} см.
+            </p>
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
             <button
               onClick={() => handleUpdateCount(item.id, item.count - 1)}
               style={counterBtnStyle}
             >
               -
             </button>
-            <span
-              style={{
-                minWidth: "30px",
-                textAlign: "center",
-                fontWeight: "700",
-              }}
-            >
-              {item.count}
-            </span>
+            <span>{item.count}</span>
             <button
               onClick={() => handleUpdateCount(item.id, item.count + 1)}
               style={counterBtnStyle}
             >
               +
             </button>
-            <span
-              style={{
-                minWidth: "100px",
-                textAlign: "right",
-                fontWeight: "700",
-              }}
-            >
-              {item.price * item.count} ₽
-            </span>
-            <button
-              onClick={() => handleRemove(item.id)}
-              style={removeBtnStyle}
-            >
-              ×
-            </button>
           </div>
+          <b style={{ minWidth: "60px", textAlign: "right" }}>
+            {item.price * item.count} ₽
+          </b>
         </div>
       ))}
 
       <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginTop: "40px",
-          alignItems: "center",
-        }}
+        className="cart-footer"
+        style={{ marginTop: "30px", textAlign: "center" }}
       >
-        <div>
-          <p style={{ margin: 0 }}>
-            Всего пицц: <b>{totalCount} шт.</b>
-          </p>
-          <p style={{ margin: 0 }}>
-            Сумма заказа: <b style={{ color: "#fe5f1e" }}>{totalPrice} ₽</b>
-          </p>
-        </div>
-        <div style={{ display: "flex", gap: "20px" }}>
-          <button onClick={handleBack} style={secondaryBtnStyle}>
-            Вернуться назад
+        <p>
+          Итого: <b>{totalPrice} ₽</b>
+        </p>
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            justifyContent: "center",
+            flexDirection: "column",
+          }}
+        >
+          <button onClick={onBack} style={secondaryBtnStyle}>
+            Назад
           </button>
           <button onClick={() => setIsModalOpen(true)} style={primaryBtnStyle}>
             Оплатить сейчас
@@ -287,84 +198,83 @@ export default function Cart({
       {isModalOpen && (
         <div style={modalOverlayStyle}>
           <div style={modalContentStyle}>
-            <h2 style={{ marginBottom: "20px" }}>Buyurtma berish</h2>
+            <h2>Buyurtmani rasmiylashtirish</h2>
             <input
-              style={inputStyle}
               placeholder="Ismingiz"
               onChange={(e) =>
                 setCustomer({ ...customer, name: e.target.value })
               }
+              style={inputStyle}
             />
             <input
-              style={inputStyle}
-              placeholder="Telefon raqamingiz"
+              placeholder="Telefon raqami"
               onChange={(e) =>
                 setCustomer({ ...customer, phone: e.target.value })
               }
+              style={inputStyle}
             />
-            <textarea
-              style={{ ...inputStyle, height: "80px" }}
-              placeholder="Manzilingiz"
+            <input
+              placeholder="Manzil"
               onChange={(e) =>
                 setCustomer({ ...customer, address: e.target.value })
               }
+              style={inputStyle}
             />
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={sendOrder} style={primaryBtnStyle}>
-                Tasdiqlash
+              <button
+                onClick={sendOrder}
+                style={primaryBtnStyle}
+                disabled={isLoading}
+              >
+                {isLoading ? "Yuborilmoqda..." : "Tasdiqlash"}
               </button>
               <button
                 onClick={() => setIsModalOpen(false)}
                 style={secondaryBtnStyle}
+                disabled={isLoading}
               >
-                Bekor qilish
+                Yopish
               </button>
             </div>
           </div>
         </div>
       )}
+
+      <style>{`
+        @media (min-width: 600px) {
+          .cart-footer { display: flex; justify-content: space-between; align-items: center; }
+          .cart-footer div { flex-direction: row !important; }
+        }
+      `}</style>
     </div>
   );
 }
 
 const counterBtnStyle = {
-  width: "32px",
-  height: "32px",
-  border: "2px solid #fe5f1e",
+  width: "30px",
+  height: "30px",
+  border: "1px solid #fe5f1e",
   borderRadius: "50%",
   background: "white",
   color: "#fe5f1e",
   cursor: "pointer",
-  fontWeight: "700" as const,
-};
-const removeBtnStyle = {
-  width: "32px",
-  height: "32px",
-  border: "2px solid #d7d7d7",
-  borderRadius: "50%",
-  background: "white",
-  color: "#d7d7d7",
-  cursor: "pointer",
-  fontWeight: "700" as const,
 };
 const primaryBtnStyle = {
   border: "none",
   background: "#fe5f1e",
   color: "white",
-  padding: "10px 20px",
+  padding: "12px 25px",
   borderRadius: "30px",
-  fontWeight: "700" as const,
   cursor: "pointer",
 };
 const secondaryBtnStyle = {
   border: "1px solid #ddd",
   background: "white",
-  padding: "10px 20px",
+  padding: "12px 25px",
   borderRadius: "30px",
   cursor: "pointer",
-  fontWeight: "700" as const,
 };
-const modalOverlayStyle: React.CSSProperties = {
+const modalOverlayStyle = {
   position: "fixed",
   top: 0,
   left: 0,
@@ -376,18 +286,17 @@ const modalOverlayStyle: React.CSSProperties = {
   alignItems: "center",
   zIndex: 1000,
 };
-const modalContentStyle: React.CSSProperties = {
+const modalContentStyle = {
   background: "white",
   padding: "30px",
   borderRadius: "20px",
-  width: "400px",
+  width: "300px",
   display: "flex",
   flexDirection: "column",
+  gap: "10px",
 };
-const inputStyle: React.CSSProperties = {
-  marginBottom: "15px",
+const inputStyle = {
   padding: "10px",
-  borderRadius: "10px",
+  borderRadius: "5px",
   border: "1px solid #ddd",
-  outline: "none",
 };

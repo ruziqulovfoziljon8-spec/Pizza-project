@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 
 interface FilteredProps {
@@ -23,61 +22,77 @@ export default function Filtered({ onCategoryChange }: FilteredProps) {
   };
 
   return (
-    <div
-      style={{
-        width: "100%",
-        height: "150px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
-        padding: "0 50px",
-        borderBottom: "1px solid #f0f0f0",
-      }}
-    >
-      <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-        {buttons.map((btn) => (
-          <button
-            key={btn.label}
-            onClick={() => handleCategoryClick(btn.category)}
-            style={{
-              width: `${btn.width}px`,
-              height: "50px",
-              borderRadius: "30px",
-              border: "none",
-              backgroundColor:
-                activeCategory === btn.category ? "black" : "#f9f9f9",
-              color: activeCategory === btn.category ? "white" : "black",
-              cursor: "pointer",
-              transition: "0.3s",
-              fontWeight: "700",
-              fontSize: "16px",
-              boxShadow:
-                activeCategory === btn.category
-                  ? "0 4px 8px rgba(0, 0, 0, 0.1)"
-                  : "none",
-            }}
-            onMouseOver={(e) => {
-              if (activeCategory !== btn.category) {
-                e.currentTarget.style.backgroundColor = "#e8e8e8";
-                e.currentTarget.style.transform = "translateY(-2px)";
-              }
-            }}
-            onMouseOut={(e) => {
-              if (activeCategory !== btn.category) {
-                e.currentTarget.style.backgroundColor = "#f9f9f9";
-                e.currentTarget.style.transform = "translateY(0)";
-              }
-            }}
-          >
-            {btn.label}
-          </button>
-        ))}
+    <>
+      <style>{`
+        .filter-container {
+          width: 100%;
+          height: 100px;
+          display: flex;
+          align-items: center;
+          padding: 0 50px;
+          border-bottom: 1px solid #f0f0f0;
+          overflow-x: auto;
+          scrollbar-width: none;
+        }
+        .filter-container::-webkit-scrollbar { display: none; }
+
+        @media (max-width: 768px) {
+          .filter-container {
+            padding: 0 15px;
+            height: 70px;
+            white-space: nowrap; 
+          }
+          .filter-btn {
+            width: auto !important; 
+            padding: 0 18px !important; 
+            flex-shrink: 0;
+          }
+        }
+      `}</style>
+
+      <div className="filter-container">
+        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+          {buttons.map((btn) => (
+            <button
+              key={btn.label}
+              className="filter-btn"
+              onClick={() => handleCategoryClick(btn.category)}
+              style={{
+                width: `${btn.width}px`,
+                height: "45px",
+                borderRadius: "30px",
+                border: "none",
+                backgroundColor:
+                  activeCategory === btn.category ? "black" : "#f9f9f9",
+                color: activeCategory === btn.category ? "white" : "black",
+                cursor: "pointer",
+                transition: "0.3s",
+                fontWeight: "700",
+                fontSize: "14px",
+                flexShrink: 0,
+                boxShadow:
+                  activeCategory === btn.category
+                    ? "0 4px 8px rgba(0, 0, 0, 0.1)"
+                    : "none",
+              }}
+              onMouseOver={(e) => {
+                if (activeCategory !== btn.category) {
+                  e.currentTarget.style.backgroundColor = "#e8e8e8";
+                  e.currentTarget.style.transform = "translateY(-2px)";
+                }
+              }}
+              onMouseOut={(e) => {
+                if (activeCategory !== btn.category) {
+                  e.currentTarget.style.backgroundColor = "#f9f9f9";
+                  e.currentTarget.style.transform = "translateY(0)";
+                }
+              }}
+            >
+              {btn.label}
+            </button>
+          ))}
+        </div>
       </div>
-
-      <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-
-
-      </div>
-    </div>
+    </>
   );
 }

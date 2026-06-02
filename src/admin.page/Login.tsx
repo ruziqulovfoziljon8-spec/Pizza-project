@@ -21,6 +21,7 @@ export default function Login() {
 
   return (
     <div
+      className="login-page-container"
       style={{
         minHeight: "100vh",
         background: `linear-gradient(rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0.65)), url('https://images.unsplash.com/photo-1513104890138-7c749659a591?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80')`,
@@ -34,6 +35,7 @@ export default function Login() {
     >
       <form
         onSubmit={handleSubmit}
+        className="login-form"
         style={{
           width: "380px",
           padding: "50px 40px",
@@ -148,6 +150,14 @@ export default function Login() {
       </form>
 
       <style>{`
+        @media (max-width: 480px) {
+          .login-form {
+            width: 90% !important;
+            padding: 30px 20px !important;
+            border-radius: 25px !important;
+          }
+        }
+
         .login-input:focus {
           border-color: #FE5F1E !important;
           background: rgba(255, 255, 255, 0.2) !important;

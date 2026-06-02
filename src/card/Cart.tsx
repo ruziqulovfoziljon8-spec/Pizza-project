@@ -275,24 +275,24 @@ const secondaryBtnStyle = {
   cursor: "pointer",
 };
 const modalOverlayStyle = {
-  position: "fixed",
+  position: "fixed" as const,
   top: 0,
   left: 0,
   width: "100%",
   height: "100%",
   background: "rgba(0,0,0,0.5)",
-  display: "flex",
+  display: "flex" as const,
   justifyContent: "center",
   alignItems: "center",
   zIndex: 1000,
-};
+} as React.CSSProperties;
 const modalContentStyle = {
   background: "white",
   padding: "30px",
   borderRadius: "20px",
   width: "300px",
   display: "flex",
-  flexDirection: "column",
+  flexDirection: "column" as const,
   gap: "10px",
 };
 const inputStyle = {
